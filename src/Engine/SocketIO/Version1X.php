@@ -67,7 +67,7 @@ class Version1X extends AbstractSocketIO
         }
 
         $this->handshake();
-        $this->connectNamespace();
+        #$this->connectNamespace();
         $this->upgradeTransport();
     }
 
@@ -418,12 +418,10 @@ class Version1X extends AbstractSocketIO
             throw new ServerConnectionFailureException('unable to perform handshake');
         }
 
-        $handshake = null;
-        if (count($data = $this->decodeData($this->stream->getBody()))) {
-            if ($data = $this->pickData($data, static::PACKET_CONNECT)) {
-                $handshake = $data->data;
-            }
-        }
+        $body = $this->stream->getBody();
+        $content = \mb_substr($body, \mb_strpos($body, '{'));
+        $content = \mb_substr($content, 0, \mb_strrpos($content, '}') + 1);
+        $handshake = \json_decode($content, true);
 
         if (null === $handshake || !in_array('websocket', $handshake['upgrades'])) {
             throw new UnsupportedTransportException('websocket');
